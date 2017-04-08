@@ -10,7 +10,7 @@ import textwrap
 import time
 import json
 import pickle
-import sha
+import hashlib
 import os
 import re
 import urllib
@@ -933,7 +933,7 @@ class SlackRequest(object):
         self.post_data = post_data
         self.params = {'useragent': 'wee_slack {}'.format(SCRIPT_VERSION)}
         self.url = 'https://{}/api/{}?{}'.format(self.domain, request, urllib.urlencode(encode_to_utf8(post_data)))
-        self.response_id = sha.sha("{}{}".format(self.url, self.start_time)).hexdigest()
+        self.response_id = hashlib.sha1("{}{}".format(self.url, self.start_time)).hexdigest()
         self.retries = kwargs.get('retries', 3)
 #    def __repr__(self):
 #        return "URL: {} Tries: {} ID: {}".format(self.url, self.tries, self.response_id)
@@ -943,7 +943,7 @@ class SlackRequest(object):
 
     def tried(self):
         self.tries += 1
-        self.response_id = sha.sha("{}{}".format(self.url, time.time())).hexdigest()
+        self.response_id = hashlib.sha1("{}{}".format(self.url, time.time())).hexdigest()
 
     def should_try(self):
         return self.tries < self.retries
@@ -1067,7 +1067,7 @@ class SlackTeam(object):
 
     @staticmethod
     def generate_team_hash(nick, subdomain):
-        return str(sha.sha("{}{}".format(nick, subdomain)).hexdigest())
+        return str(hashlib.sha1("{}{}".format(nick, subdomain)).hexdigest())
 
     def refresh(self):
         self.rename()
@@ -1589,7 +1589,7 @@ class SlackChannel(object):
         ts = SlackTS(ts)
 
         def calc_hash(msg):
-            return sha.sha(str(msg.ts)).hexdigest()
+            return hashlib.sha1(str(msg.ts)).hexdigest()
 
         if ts in self.messages and not self.messages[ts].hash:
             message = self.messages[ts]
