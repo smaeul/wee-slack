@@ -2932,7 +2932,7 @@ def tag(tagset, user=None):
         "dm": "irc_privmsg,notify_private,log1",
         "dmfromme": "irc_privmsg,no_highlight,notify_none,log1",
         # when this is a join/leave, attach for smart filter ala:
-        # if user in [x.strip() for x in w.prefix("join"), w.prefix("quit")]
+        # if user in [x.strip() for x in (w.prefix("join"), w.prefix("quit"))]
         "joinleave": "irc_smart_filter,no_highlight,log4",
         # catchall ?
         "default": "irc_privmsg,notify_message,log1",
