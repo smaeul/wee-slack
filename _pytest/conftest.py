@@ -55,13 +55,13 @@ class FakeWeechat():
 
     def __init__(self):
         pass
-        #print "INITIALIZE FAKE WEECHAT"
+        #print("INITIALIZE FAKE WEECHAT")
     def prnt(*args):
         output = "("
         for arg in args:
             if arg != None:
                 output += "{}, ".format(arg)
-        print "w.prnt {}".format(output)
+        print("w.prnt {}".format(output))
     def hdata_get(*args):
         return "0x000001"
     def hdata_pointer(*args):
@@ -81,9 +81,9 @@ class FakeWeechat():
     def __getattr__(self, name):
         def method(*args):
             pass
-            #print "called {}".format(name)
+            #print("called {}".format(name))
             #if args:
-            #    print "\twith args: {}".format(args)
+            #    print("\twith args: {}".format(args))
         return method
 
 @pytest.fixture
