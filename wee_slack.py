@@ -3673,7 +3673,7 @@ class PluginConfig(object):
         # Migrate settings from old versions of Weeslack...
         self.migrate()
         # ...and then set anything left over from the defaults.
-        for key, default in self.settings.iteritems():
+        for key, default in self.settings.items():
             if not w.config_get_plugin(key):
                 w.config_set_plugin(key, default)
         self.config_changed(None, None, None)
@@ -3699,7 +3699,10 @@ class PluginConfig(object):
             return self.get_boolean(key)
 
     def __getattr__(self, key):
-        return self.settings[key]
+        try:
+            return self.settings[key]
+        except KeyError:
+            raise AttributeError(key)
 
     def get_boolean(self, key):
         return w.config_string_to_boolean(w.config_get_plugin(key))
