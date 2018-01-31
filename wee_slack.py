@@ -13,13 +13,19 @@ import pickle
 import hashlib
 import os
 import re
-import urllib
 import sys
 import traceback
 import collections
 import ssl
 import random
 import string
+
+try:
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlencode
+    from urllib2 import urlopen
 
 from websocket import create_connection, WebSocketConnectionClosedException
 
@@ -130,31 +136,36 @@ EMOJI = []
 ###### Unicode handling
 
 
-def encode_to_utf8(data):
-    if isinstance(data, type(u"")):
-        return data.encode('utf-8')
-    if isinstance(data, bytes):
-        return data
-    elif isinstance(data, collections.Mapping):
-        return type(data)(map(encode_to_utf8, data.iteritems()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(encode_to_utf8, data))
-    else:
-        return data
+if sys.version_info[0] == 2:
+    def encode_to_utf8(data):
+        if isinstance(data, type(u"")):
+            return data.encode('utf-8')
+        if isinstance(data, bytes):
+            return data
+        elif isinstance(data, collections.Mapping):
+            return type(data)(map(encode_to_utf8, data.items()))
+        elif isinstance(data, collections.Iterable):
+            return type(data)(map(encode_to_utf8, data))
+        else:
+            return data
 
 
-def decode_from_utf8(data):
-    if isinstance(data, bytes):
-        return data.decode('utf-8')
-    if isinstance(data, type(u"")):
+    def decode_from_utf8(data):
+        if isinstance(data, bytes):
+            return data.decode('utf-8')
+        if isinstance(data, type(u"")):
+            return data
+        elif isinstance(data, collections.Mapping):
+            return type(data)(map(decode_from_utf8, data.items()))
+        elif isinstance(data, collections.Iterable):
+            return type(data)(map(decode_from_utf8, data))
+        else:
+            return data
+else:
+    def encode_to_utf8(data):
         return data
-    elif isinstance(data, collections.Mapping):
-        return type(data)(map(decode_from_utf8, data.iteritems()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(decode_from_utf8, data))
-    else:
+    def decode_from_utf8(data):
         return data
-
 
 class WeechatWrapper(object):
     def __init__(self, wrapped_class):
@@ -311,7 +322,7 @@ class EventRouter(object):
             raise InvalidType(type(team))
 
     def reconnect_if_disconnected(self):
-        for team_id, team in self.teams.iteritems():
+        for team_id, team in self.teams.items():
             if not team.connected:
                 team.connect()
                 dbg("reconnecting {}".format(team))
@@ -932,8 +943,8 @@ class SlackRequest(object):
         post_data["token"] = token
         self.post_data = post_data
         self.params = {'useragent': 'wee_slack {}'.format(SCRIPT_VERSION)}
-        self.url = 'https://{}/api/{}?{}'.format(self.domain, request, urllib.urlencode(encode_to_utf8(post_data)))
-        self.response_id = hashlib.sha1("{}{}".format(self.url, self.start_time)).hexdigest()
+        self.url = 'https://{}/api/{}?{}'.format(self.domain, request, urlencode(encode_to_utf8(post_data)))
+        self.response_id = hashlib.sha1("{}{}".format(self.url, self.start_time).encode("utf-8")).hexdigest()
         self.retries = kwargs.get('retries', 3)
 #    def __repr__(self):
 #        return "URL: {} Tries: {} ID: {}".format(self.url, self.tries, self.response_id)
@@ -943,7 +954,7 @@ class SlackRequest(object):
 
     def tried(self):
         self.tries += 1
-        self.response_id = hashlib.sha1("{}{}".format(self.url, time.time())).hexdigest()
+        self.response_id = hashlib.sha1("{}{}".format(self.url, time.time()).encode("utf-8")).hexdigest()
 
     def should_try(self):
         return self.tries < self.retries
@@ -1057,17 +1068,17 @@ class SlackTeam(object):
         w.prnt_date_tags(self.channel_buffer, SlackTS().major, tag("team"), data)
 
     def get_channel_map(self):
-        return {v.slack_name: k for k, v in self.channels.iteritems()}
+        return {v.slack_name: k for k, v in self.channels.items()}
 
     def get_username_map(self):
-        return {v.name: k for k, v in self.users.iteritems()}
+        return {v.name: k for k, v in self.users.items()}
 
     def get_team_hash(self):
         return self.team_hash
 
     @staticmethod
     def generate_team_hash(nick, subdomain):
-        return str(hashlib.sha1("{}{}".format(nick, subdomain)).hexdigest())
+        return str(hashlib.sha1("{}{}".format(nick, subdomain).encode("utf-8")).hexdigest())
 
     def refresh(self):
         self.rename()
@@ -1497,7 +1508,7 @@ class SlackChannel(object):
         returns if any of them is actively typing. If none are,
         nulls the dict and returns false.
         """
-        for user, timestamp in self.typing.iteritems():
+        for user, timestamp in self.typing.items():
             if timestamp + 4 > time.time():
                 return True
         if len(self.typing) > 0:
@@ -1510,7 +1521,7 @@ class SlackChannel(object):
         Returns the names of everyone in the channel who is currently typing.
         """
         typing = []
-        for user, timestamp in self.typing.iteritems():
+        for user, timestamp in self.typing.items():
             if timestamp + 4 > time.time():
                 typing.append(user)
             else:
@@ -1589,7 +1600,7 @@ class SlackChannel(object):
         ts = SlackTS(ts)
 
         def calc_hash(msg):
-            return hashlib.sha1(str(msg.ts)).hexdigest()
+            return hashlib.sha1(str(msg.ts).encode("utf-8")).hexdigest()
 
         if ts in self.messages and not self.messages[ts].hash:
             message = self.messages[ts]
@@ -3044,7 +3055,7 @@ def command_register(data, current_buffer, args):
         "https://slack.com/api/oauth.access?"
         "client_id={}&client_secret={}&code={}"
     ).format(CLIENT_ID, CLIENT_SECRET, oauth_code)
-    ret = urllib.urlopen(uri).read()
+    ret = urlopen(uri).read()
     d = json.loads(ret)
     if not d["ok"]:
         w.prnt("",
@@ -3664,7 +3675,7 @@ class PluginConfig(object):
         self.settings = {}
         # Set all descriptions, replace the values in the dict with the
         # default setting value rather than the (setting,desc) tuple.
-        # Use items() rather than iteritems() so we don't need to worry about
+        # Use items() rather than items() so we don't need to worry about
         # invalidating the iterator.
         for key, (default, desc) in self.default_settings.items():
             w.config_set_desc_plugin(key, desc)
