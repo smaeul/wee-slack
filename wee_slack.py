@@ -131,7 +131,7 @@ EMOJI = []
 
 
 def encode_to_utf8(data):
-    if isinstance(data, unicode):
+    if isinstance(data, type(u"")):
         return data.encode('utf-8')
     if isinstance(data, bytes):
         return data
@@ -146,7 +146,7 @@ def encode_to_utf8(data):
 def decode_from_utf8(data):
     if isinstance(data, bytes):
         return data.decode('utf-8')
-    if isinstance(data, unicode):
+    if isinstance(data, type(u"")):
         return data
     elif isinstance(data, collections.Mapping):
         return type(data)(map(decode_from_utf8, data.iteritems()))
@@ -1139,7 +1139,7 @@ class SlackTeam(object):
             self.ws.send(encode_to_utf8(message))
             dbg("Sent {}...".format(message[:100]))
         except:
-            print "WS ERROR"
+            print("WS ERROR")
             dbg("Unexpected error: {}\nSent: {}".format(sys.exc_info()[0], data))
             self.set_connected()
 
@@ -1819,7 +1819,7 @@ class SlackThreadChannel(object):
 
             # message = SlackMessage(message_json, team, channel)
             text = message.render()
-            # print text
+            # print(text)
 
             suffix = ''
             if 'edited' in message.message_json:
@@ -2362,7 +2362,7 @@ def process_message(message_json, eventrouter, store=True, **kwargs):
 
 
 def subprocess_thread_message(message_json, eventrouter, channel, team):
-    # print ("THREADED: " + str(message_json))
+    # print("THREADED: " + str(message_json))
     parent_ts = message_json.get('thread_ts', None)
     if parent_ts:
         parent_message = channel.messages.get(SlackTS(parent_ts), None)
@@ -3777,9 +3777,9 @@ def trace_calls(frame, event, arg):
     caller = frame.f_back
     caller_line_no = caller.f_lineno
     caller_filename = caller.f_code.co_filename
-    print >> f, 'Call to %s on line %s of %s from line %s of %s' % \
+    print('Call to %s on line %s of %s from line %s of %s' %
         (func_name, func_line_no, func_filename,
-         caller_line_no, caller_filename)
+         caller_line_no, caller_filename), file=f)
     f.flush()
     return
 
