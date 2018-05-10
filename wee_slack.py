@@ -142,10 +142,13 @@ def utf8_decode(f):
     Decode all arguments from byte strings to unicode strings. Use this for
     functions called from outside of this script, e.g. callbacks from weechat.
     """
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        return f(*decode_from_utf8(args), **decode_from_utf8(kwargs))
-    return wrapper
+    if sys.version_info[0] == 2:
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            return f(*decode_from_utf8(args), **decode_from_utf8(kwargs))
+        return wrapper
+    else:
+        return f
 
 
 NICK_GROUP_HERE = "0|Here"
@@ -206,6 +209,8 @@ class WeechatWrapper(object):
     # unicode type internally in wee-slack, but has to send utf8 to weechat.
     def __getattr__(self, attr):
         orig_attr = self.wrapped_class.__getattribute__(attr)
+        if sys.version_info[0] > 2:
+            return orig_attr
         if callable(orig_attr):
             return self.wrap_for_utf8(orig_attr)
         else:
@@ -215,7 +220,10 @@ class WeechatWrapper(object):
     # first, we want to disable the prefix, which is done by specifying a space.
     def prnt_date_tags(self, buffer, date, tags, message):
         message = message.replace("\n", "\n \t")
-        return self.wrap_for_utf8(self.wrapped_class.prnt_date_tags)(buffer, date, tags, message)
+        if sys.version_info[0] == 2:
+            return self.wrap_for_utf8(self.wrapped_class.prnt_date_tags)(buffer, date, tags, message)
+        else:
+            return self.wrapped_class.prnt_date_tags(buffer, date, tags, message)
 
 
 ##### Helpers
@@ -3172,7 +3180,7 @@ def command_register(data, current_buffer, args):
         "client_id={}&client_secret={}&code={}"
     ).format(CLIENT_ID, CLIENT_SECRET, oauth_code)
     ret = urlopen(uri).read()
-    d = json.loads(ret)
+    d = json.loads(ret.decode())
     if not d["ok"]:
         w.prnt("",
             "ERROR: Couldn't get Slack OAuth token: {}".format(d['error']))
