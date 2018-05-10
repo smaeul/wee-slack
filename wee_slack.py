@@ -402,7 +402,7 @@ class EventRouter(object):
                     # dbg("Incomplete json, awaiting more", True)
                 try:
                     j["wee_slack_process_method"] = request_metadata.request_normalized
-                    j["wee_slack_request_metadata"] = pickle.dumps(request_metadata)
+                    j["wee_slack_request_metadata"] = pickle.dumps(request_metadata, 0).decode()
                     self.reply_buffer.pop(request_metadata.response_id)
                     if self.recording:
                         self.record_event(j, 'wee_slack_process_method', 'http')
@@ -2178,7 +2178,7 @@ def handle_rtmstart(login_data, eventrouter):
     """
     This handles the main entry call to slack, rtm.start
     """
-    metadata = pickle.loads(login_data["wee_slack_request_metadata"])
+    metadata = pickle.loads(login_data["wee_slack_request_metadata"].encode())
 
     if not login_data["ok"]:
         w.prnt("", "ERROR: Failed connecting to Slack with token starting with {}: {}"
