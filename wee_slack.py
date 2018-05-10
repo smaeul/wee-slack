@@ -49,6 +49,12 @@ def iteritems(d):
     except AttributeError:
         return iter(d.items()) # Python 3
 
+def itervalues(d):
+    try:
+        return d.itervalues()   # Python 2
+    except AttributeError:
+        return iter(d.values()) # Python 3
+
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Ryan Huber <rhuber@gmail.com>"
 SCRIPT_VERSION = "2.0.0"
@@ -1069,7 +1075,7 @@ class SlackTeam(object):
     def set_highlight_words(self, highlight_str):
         self.highlight_words = {x for x in highlight_str.split(',')}
         if len(self.highlight_words) > 0:
-            for v in self.channels.itervalues():
+            for v in itervalues(self.channels):
                 v.set_highlights()
 
     def formatted_name(self, **kwargs):
@@ -1079,7 +1085,7 @@ class SlackTeam(object):
         w.prnt_date_tags(self.channel_buffer, SlackTS().major, tag("team"), data)
 
     def find_channel_by_members(self, members, channel_type=None):
-        for channel in self.channels.itervalues():
+        for channel in itervalues(self.channels):
             if channel.get_members() == members and (
                     channel_type is None or channel.type == channel_type):
                 return channel
@@ -3417,7 +3423,7 @@ def command_nodistractions(data, current_buffer, args):
         for channel in config.distracting_channels:
             dbg('hiding channel {}'.format(channel))
             # try:
-            for c in EVENTROUTER.weechat_controller.buffers.itervalues():
+            for c in itervalues(EVENTROUTER.weechat_controller.buffers):
                 if c == channel:
                     dbg('found channel {} to hide'.format(channel))
                     w.buffer_set(c.channel_buffer, "hidden", str(int(hide_distractions)))
