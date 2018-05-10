@@ -43,6 +43,12 @@ try:
 except:
     pass
 
+def iteritems(d):
+    try:
+        return d.iteritems()   # Python 2
+    except AttributeError:
+        return iter(d.items()) # Python 3
+
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Ryan Huber <rhuber@gmail.com>"
 SCRIPT_VERSION = "2.0.0"
@@ -150,7 +156,7 @@ def encode_to_utf8(data):
     if isinstance(data, bytes):
         return data
     elif isinstance(data, collections.Mapping):
-        return type(data)(map(encode_to_utf8, data.iteritems()))
+        return type(data)(map(encode_to_utf8, iteritems(data)))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(encode_to_utf8, data))
     else:
@@ -163,7 +169,7 @@ def decode_from_utf8(data):
     if isinstance(data, unicode):
         return data
     elif isinstance(data, collections.Mapping):
-        return type(data)(map(decode_from_utf8, data.iteritems()))
+        return type(data)(map(decode_from_utf8, iteritems(data)))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(decode_from_utf8, data))
     else:
@@ -327,7 +333,7 @@ class EventRouter(object):
             raise InvalidType(type(team))
 
     def reconnect_if_disconnected(self):
-        for team_id, team in self.teams.iteritems():
+        for team_id, team in iteritems(self.teams):
             if not team.connected:
                 team.connect()
                 dbg("reconnecting {}".format(team))
@@ -1079,10 +1085,10 @@ class SlackTeam(object):
                 return channel
 
     def get_channel_map(self):
-        return {v.slack_name: k for k, v in self.channels.iteritems()}
+        return {v.slack_name: k for k, v in iteritems(self.channels)}
 
     def get_username_map(self):
-        return {v.name: k for k, v in self.users.iteritems()}
+        return {v.name: k for k, v in iteritems(self.users)}
 
     def get_team_hash(self):
         return self.team_hash
@@ -1520,7 +1526,7 @@ class SlackChannel(object):
         returns if any of them is actively typing. If none are,
         nulls the dict and returns false.
         """
-        for user, timestamp in self.typing.iteritems():
+        for user, timestamp in iteritems(self.typing):
             if timestamp + 4 > time.time():
                 return True
         if len(self.typing) > 0:
@@ -1533,7 +1539,7 @@ class SlackChannel(object):
         Returns the names of everyone in the channel who is currently typing.
         """
         typing = []
-        for user, timestamp in self.typing.iteritems():
+        for user, timestamp in iteritems(self.typing):
             if timestamp + 4 > time.time():
                 typing.append(user)
             else:
@@ -3765,16 +3771,16 @@ class PluginConfig(object):
         self.settings = {}
         # Set all descriptions, replace the values in the dict with the
         # default setting value rather than the (setting,desc) tuple.
-        # Use items() rather than iteritems() so we don't need to worry about
+        # Create a list from the items so we don't need to worry about
         # invalidating the iterator.
-        for key, (default, desc) in self.default_settings.items():
+        for key, (default, desc) in list(iteritems(self.default_settings)):
             w.config_set_desc_plugin(key, desc)
             self.settings[key] = default
 
         # Migrate settings from old versions of Weeslack...
         self.migrate()
         # ...and then set anything left over from the defaults.
-        for key, default in self.settings.iteritems():
+        for key, default in iteritems(self.settings):
             if not w.config_get_plugin(key):
                 w.config_set_plugin(key, default)
         self.config_changed(None, None, None)
