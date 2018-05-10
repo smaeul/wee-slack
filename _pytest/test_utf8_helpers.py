@@ -23,19 +23,24 @@ def test_decode_preserves_iterable_type():
     assert type(value_tuple) == type(decode_from_utf8(value_tuple))
 
 def test_decodes_utf8_string_to_unicode():
-    assert u'æøå' == decode_from_utf8(b'æøå')
+    assert u'æøå' == decode_from_utf8(u'æøå'.encode())
 
 def test_decodes_utf8_dict_to_unicode():
-    assert {u'æ': u'å', u'ø': u'å'} == decode_from_utf8({b'æ': b'å', b'ø': b'å'})
+    unicode_dict = {u'æ': u'å', u'ø': u'å'}
+    utf8_dict = {k.encode(): v.encode() for k, v in unicode_dict.items()}
+    assert unicode_dict == decode_from_utf8(utf8_dict)
 
 def test_decodes_utf8_list_to_unicode():
-    assert [u'æ', u'ø', u'å'] == decode_from_utf8([b'æ', b'ø', b'å'])
+    unicode_list = [u'æ', u'ø', u'å']
+    utf8_list = [s.encode() for s in unicode_list]
+    assert unicode_list == decode_from_utf8(utf8_list)
 
 def test_encode_preserves_string_without_utf8():
     assert b'test' == encode_to_utf8(u'test')
 
 def test_encode_preserves_byte_strings():
-    assert b'æøå' == encode_to_utf8(b'æøå')
+    byte_string = u'æøå'.encode()
+    assert byte_string == encode_to_utf8(byte_string)
 
 def test_encode_preserves_mapping_type():
     value_dict = {'a': 'x', 'b': 'y', 'c': 'z'}
@@ -50,21 +55,26 @@ def test_encode_preserves_iterable_type():
     assert type(value_tuple) == type(encode_to_utf8(value_tuple))
 
 def test_encodes_utf8_string_to_unicode():
-    assert b'æøå' == encode_to_utf8(u'æøå')
+    assert u'æøå'.encode() == encode_to_utf8(u'æøå')
 
 def test_encodes_utf8_dict_to_unicode():
-    assert {b'æ': b'å', b'ø': b'å'} == encode_to_utf8({u'æ': u'å', u'ø': u'å'})
+    unicode_dict = {u'æ': u'å', u'ø': u'å'}
+    utf8_dict = {k.encode(): v.encode() for k, v in unicode_dict.items()}
+    assert utf8_dict == encode_to_utf8(unicode_dict)
 
 def test_encodes_utf8_list_to_unicode():
-    assert [b'æ', b'ø', b'å'] == encode_to_utf8([u'æ', u'ø', u'å'])
+    unicode_list = [u'æ', u'ø', u'å']
+    utf8_list = [s.encode() for s in unicode_list]
+    assert utf8_list == encode_to_utf8(unicode_list)
 
 @utf8_decode
 def method_with_utf8_decode(*args, **kwargs):
-    return (args, kwargs)
+    return (list(args), kwargs)
 
 def test_utf8_decode():
-    args = (b'æ', b'ø', b'å')
-    kwargs = {b'æ': b'å', b'ø': b'å'}
+    args = [s.encode() for s in (u'æ', u'ø', u'å')]
+    # In Python 3, kwargs keys must be unicode.
+    kwargs = {k: v.encode() for k, v in {u'a': u'å', u'b': u'å'}.items()}
 
     result_args, result_kwargs = method_with_utf8_decode(*args, **kwargs)
 
