@@ -3,8 +3,8 @@ def test_PresenceChange(realish_eventrouter, mock_websocket):
 
     e = realish_eventrouter
 
-    t = e.teams.keys()[0]
-    u = e.teams[t].users.keys()[0]
+    t = next(iter(e.teams.keys()))
+    u = next(iter(e.teams[t].users.keys()))
 
     user = e.teams[t].users[u]
 

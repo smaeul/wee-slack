@@ -7,21 +7,21 @@ from wee_slack import ProcessNotImplemented
 
 def test_process_team_join(mock_websocket, realish_eventrouter):
 
-    eventrouter = realish_eventrouter
+    e = realish_eventrouter
 
-    t = eventrouter.teams.keys()[0]
-    #u = eventrouter.teams[t].users.keys()[0]
+    t = next(iter(e.teams.keys()))
+    #u = next(iter(e.teams[t].users.keys()))
 
-    #user = eventrouter.teams[t].users[u]
+    #user = e.teams[t].users[u]
     #print(user)
 
     #delete charles so we can add him
-    del eventrouter.teams[t].users['U4096CBHC']
+    del e.teams[t].users['U4096CBHC']
 
-    assert len(eventrouter.teams[t].users) == 3
+    assert len(e.teams[t].users) == 3
 
     socket = mock_websocket
-    eventrouter.teams[t].ws = socket
+    e.teams[t].ws = socket
 
     datafiles = glob.glob("_pytest/data/websocket/1485975606.59-team_join.json")
 
@@ -36,8 +36,8 @@ def test_process_team_join(mock_websocket, realish_eventrouter):
             data = json.loads(open(fname, 'r').read())
             socket.add(data)
             print(data)
-            eventrouter.receive_ws_callback(t)
-            eventrouter.handle_next()
+            e.receive_ws_callback(t)
+            e.handle_next()
         except ProcessNotImplemented as e:
             notimplemented.add(str(e))
         #this handles some message data not existing - need to fix
@@ -49,8 +49,8 @@ def test_process_team_join(mock_websocket, realish_eventrouter):
         print(sorted(notimplemented))
         print("####################")
 
-    #print(len(eventrouter.queue))
-    assert len(eventrouter.teams[t].users) == 4
+    #print(len(e.queue))
+    assert len(e.teams[t].users) == 4
 
 
 

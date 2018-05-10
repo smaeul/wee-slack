@@ -37,9 +37,9 @@ def realish_eventrouter(mock_weechat):
         e.handle_next()
     #e.sc is just shortcuts to these items
     e.sc = {}
-    e.sc["team_id"] = e.teams.keys()[0]
+    e.sc["team_id"] = next(iter(e.teams.keys()))
     e.sc["team"] = e.teams[e.sc["team_id"]]
-    e.sc["user"] = e.teams[e.sc["team_id"]].users[e.teams[e.sc["team_id"]].users.keys()[0]]
+    e.sc["user"] = e.teams[e.sc["team_id"]].users[next(iter(e.teams[e.sc["team_id"]].users.keys()))]
     socket = mock_websocket
     e.teams[e.sc["team_id"]].ws = socket
 

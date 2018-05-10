@@ -10,7 +10,7 @@ def test_everything(realish_eventrouter, mock_websocket):
 
     eventrouter = realish_eventrouter
 
-    t = eventrouter.teams.keys()[0]
+    t = next(iter(eventrouter.teams.keys()))
     #u = eventrouter.teams[t].users.keys()[0]
 
     #user = eventrouter.teams[t].users[u]

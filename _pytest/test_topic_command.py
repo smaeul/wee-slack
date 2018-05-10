@@ -47,8 +47,8 @@ def test_parse_topic_with_channel_and_delete():
 
 
 def test_call_topic_without_arguments(realish_eventrouter):
-    team = realish_eventrouter.teams.values()[-1]
-    channel = team.channels.values()[-1]
+    team = list(realish_eventrouter.teams.values())[-1]
+    channel = list(team.channels.values())[-1]
     current_buffer = channel.channel_buffer
     wee_slack.EVENTROUTER = realish_eventrouter
 
@@ -64,8 +64,8 @@ def test_call_topic_without_arguments(realish_eventrouter):
 
 
 def test_call_topic_with_unknown_channel(realish_eventrouter):
-    team = realish_eventrouter.teams.values()[-1]
-    channel = team.channels.values()[-1]
+    team = list(realish_eventrouter.teams.values())[-1]
+    channel = list(team.channels.values())[-1]
     current_buffer = channel.channel_buffer
     wee_slack.EVENTROUTER = realish_eventrouter
 
@@ -81,8 +81,8 @@ def test_call_topic_with_unknown_channel(realish_eventrouter):
 
 
 def test_call_topic_with_channel_and_string(realish_eventrouter):
-    team = realish_eventrouter.teams.values()[-1]
-    channel = team.channels.values()[-1]
+    team = list(realish_eventrouter.teams.values())[-1]
+    channel = list(team.channels.values())[-1]
     current_buffer = channel.channel_buffer
     wee_slack.EVENTROUTER = realish_eventrouter
 
